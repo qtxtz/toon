@@ -18,11 +18,11 @@ describe('toon CLI', () => {
 
   describe('version', () => {
     it('prints the version when using --version', async () => {
-      const consolaLog = vi.spyOn(consola, 'log').mockImplementation(() => undefined)
+      const consoleLog = vi.mocked(console.log)
 
       await runCli({ rawArgs: ['--version'] })
 
-      expect(consolaLog).toHaveBeenCalledWith(version)
+      expect(consoleLog).toHaveBeenCalledWith(version)
     })
   })
 
@@ -655,7 +655,7 @@ describe('toon CLI', () => {
         'input.json': JSON.stringify({ value: 1 }),
       })
 
-      const consolaError = vi.spyOn(consola, 'error').mockImplementation(() => undefined)
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
       const exitSpy = vi.mocked(process.exit)
 
       try {
@@ -663,7 +663,7 @@ describe('toon CLI', () => {
 
         expect(exitSpy).toHaveBeenCalledWith(1)
 
-        const errorCall = consolaError.mock.calls.at(0)
+        const errorCall = consoleError.mock.calls.at(0)
         expect(errorCall).toBeDefined()
         const [error] = errorCall!
         expect(error).toBeInstanceOf(Error)
@@ -679,7 +679,7 @@ describe('toon CLI', () => {
         'input.json': JSON.stringify({ value: 1 }),
       })
 
-      const consolaError = vi.spyOn(consola, 'error').mockImplementation(() => undefined)
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
       const exitSpy = vi.mocked(process.exit)
 
       try {
@@ -687,7 +687,7 @@ describe('toon CLI', () => {
 
         expect(exitSpy).toHaveBeenCalledWith(1)
 
-        const errorCall = consolaError.mock.calls.at(0)
+        const errorCall = consoleError.mock.calls.at(0)
         expect(errorCall).toBeDefined()
         const [error] = errorCall!
         expect(error).toBeInstanceOf(Error)
@@ -720,7 +720,7 @@ describe('toon CLI', () => {
         'input.json': JSON.stringify({ value: 1 }),
       })
 
-      const consolaError = vi.spyOn(consola, 'error').mockImplementation(() => undefined)
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
       const exitSpy = vi.mocked(process.exit)
 
       try {
@@ -728,7 +728,7 @@ describe('toon CLI', () => {
 
         expect(exitSpy).toHaveBeenCalledWith(1)
 
-        const errorCall = consolaError.mock.calls.at(0)
+        const errorCall = consoleError.mock.calls.at(0)
         expect(errorCall).toBeDefined()
         const [error] = errorCall!
         expect(error).toBeInstanceOf(Error)
@@ -744,7 +744,7 @@ describe('toon CLI', () => {
         'input.toon': 'key: value',
       })
 
-      const consolaError = vi.spyOn(consola, 'error').mockImplementation(() => undefined)
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
       const exitSpy = vi.mocked(process.exit)
 
       try {
@@ -752,7 +752,7 @@ describe('toon CLI', () => {
 
         expect(exitSpy).toHaveBeenCalledWith(1)
 
-        const errorCall = consolaError.mock.calls.at(0)
+        const errorCall = consoleError.mock.calls.at(0)
         expect(errorCall).toBeDefined()
         const [error] = errorCall!
         expect(error).toBeInstanceOf(Error)
@@ -768,7 +768,7 @@ describe('toon CLI', () => {
         'input.json': JSON.stringify({ value: 1 }),
       })
 
-      const consolaError = vi.spyOn(consola, 'error').mockImplementation(() => undefined)
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
       const exitSpy = vi.mocked(process.exit)
 
       try {
@@ -776,7 +776,7 @@ describe('toon CLI', () => {
 
         expect(exitSpy).toHaveBeenCalledWith(1)
 
-        const errorCall = consolaError.mock.calls.at(0)
+        const errorCall = consoleError.mock.calls.at(0)
         expect(errorCall).toBeDefined()
         const [error] = errorCall!
         expect(error).toBeInstanceOf(Error)
