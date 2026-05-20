@@ -12,7 +12,7 @@ const config: Theme = {
   extends: DefaultTheme,
   enhanceApp({ app }) {
     app.config.globalProperties.$spec = {
-      version: '3.0',
+      version: '3.2',
     }
     app.component('CopyOrDownloadAsMarkdownButtons', CopyOrDownloadAsMarkdownButtons)
     app.component('PlaygroundLayout', PlaygroundLayout)
