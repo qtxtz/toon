@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/toon-format/toon/actions/workflows/ci.yml/badge.svg)](https://github.com/toon-format/toon/actions)
 [![npm version](https://img.shields.io/npm/v/@toon-format/toon.svg?labelColor=1b1b1f&color=fef3c0)](https://www.npmjs.com/package/@toon-format/toon)
-[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
+[![SPEC v3.2](https://img.shields.io/badge/spec-v3.2-fef3c0?labelColor=1b1b1f)](https://github.com/toon-format/spec)
 [![npm downloads (total)](https://img.shields.io/npm/dt/@toon-format/toon.svg?labelColor=1b1b1f&color=fef3c0)](https://www.npmjs.com/package/@toon-format/toon)
 [![License: MIT](https://img.shields.io/badge/license-MIT-fef3c0?labelColor=1b1b1f)](./LICENSE)
 
@@ -134,9 +134,18 @@ hikes[3]{id,name,distanceKm,elevationGain,companion,wasSunny}:
 - 🧺 **Tabular Arrays:** Uniform arrays of objects collapse into tables that declare fields once and stream row values line by line.
 - 🌐 **Multi-Language Ecosystem:** Spec-driven implementations in TypeScript, Python, Go, Rust, .NET, and other languages.
 
+## What's New in v3.2
+
+- Empty arrays now encode as `key: []` (and `[]` at the root) instead of the legacy `key[0]:` header. The legacy form still decodes.
+- Strict mode rejects duplicate sibling keys; with `strict: false` the last value wins.
+- Malformed array headers (`[03]`, `[1] foo:`, header/field delimiter mismatch) error in strict mode instead of silently degrading.
+- Tabular form excludes arrays that contain an empty `{}` element – those fall back to the expanded list form.
+- Nested arrays-of-objects can appear as list items via an explicit `- [N]:` header.
+- `\uXXXX` escapes are emitted for U+0000–U+001F control characters outside `\n`, `\r`, `\t`, and accepted on decode.
+
 ## Media Type & File Extension
 
-By convention, TOON files use the `.toon` extension and the provisional media type `text/toon` for HTTP and content-type–aware contexts. TOON documents are always UTF-8 encoded; the `charset=utf-8` parameter may be specified but defaults to UTF-8 when omitted. See [SPEC.md §18.2](https://github.com/toon-format/spec/blob/main/SPEC.md#182-provisional-media-type) for normative details.
+By convention, TOON files use the `.toon` extension and the provisional media type `text/toon` for HTTP and content-type–aware contexts. TOON documents are always UTF-8 encoded; the `charset=utf-8` parameter may be specified but defaults to UTF-8 when omitted. See [SPEC.md §17](https://github.com/toon-format/spec/blob/main/SPEC.md#17-iana-considerations) for normative details.
 
 ## When Not to Use TOON
 
