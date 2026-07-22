@@ -418,6 +418,10 @@ describe('streaming decode', () => {
       expect(decodeFromLines(lines)).toEqual(decode(input))
     })
 
+    it('strips trailing carriage returns from caller-split lines', () => {
+      expect(decodeFromLines(['a: 1\r', 'b: 2\r'])).toEqual({ a: 1, b: 2 })
+    })
+
     it('handles list item objects with empty string keyed tabular fields', () => {
       const input = [
         'items[1]:',
