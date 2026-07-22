@@ -139,7 +139,7 @@ importers:
     devDependencies:
       '@toon-format/spec':
         specifier: github:toon-format/spec#v4
-        version: https://codeload.github.com/toon-format/spec/tar.gz/116c71b454299e3f611c046a913ee1fbe430f3a3
+        version: https://codeload.github.com/toon-format/spec/tar.gz/509d675373d52fe8b7b82a9e3cc9b4661d3261e3
 
 packages:
 
@@ -1187,8 +1187,8 @@ packages:
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
 
-  '@toon-format/spec@https://codeload.github.com/toon-format/spec/tar.gz/116c71b454299e3f611c046a913ee1fbe430f3a3':
-    resolution: {gitHosted: true, integrity: sha512-5A2zxLuZdmIqLIvGbHfWyaz/ErpkK2GPheV+tjDjd2/eKOmPB3sKGm98h2AGfVy7HGQ9i4zfiMxzGWEyu4SysA==, tarball: https://codeload.github.com/toon-format/spec/tar.gz/116c71b454299e3f611c046a913ee1fbe430f3a3}
+  '@toon-format/spec@https://codeload.github.com/toon-format/spec/tar.gz/509d675373d52fe8b7b82a9e3cc9b4661d3261e3':
+    resolution: {gitHosted: true, integrity: sha512-KzOZGsqTPnEQZzFmbr8bEsMcYyYKghcfIzvqSnsl7VIheeX+G36uwpxUaAtkAIYlej0TJEYzcF9iYp2SNvhwNw==, tarball: https://codeload.github.com/toon-format/spec/tar.gz/509d675373d52fe8b7b82a9e3cc9b4661d3261e3}
     version: 3.3.2
 
   '@tybys/wasm-util@0.10.3':
@@ -4570,7 +4570,7 @@ snapshots:
       estraverse: 5.3.0
       picomatch: 4.0.5
 
-  '@toon-format/spec@https://codeload.github.com/toon-format/spec/tar.gz/116c71b454299e3f611c046a913ee1fbe430f3a3': {}
+  '@toon-format/spec@https://codeload.github.com/toon-format/spec/tar.gz/509d675373d52fe8b7b82a9e3cc9b4661d3261e3': {}
 
   '@tybys/wasm-util@0.10.3':
     dependencies:
