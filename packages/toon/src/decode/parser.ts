@@ -147,17 +147,18 @@ export function parseArrayHeaderLine(
     }
   }
 
-  if (keyed) {
-    if (!fields) {
-      if (strict)
-        throw new SyntaxError('Keyed header requires a fields segment')
-      return
-    }
-    if (afterColon) {
-      if (strict)
-        throw new SyntaxError('Unexpected content after keyed header colon')
-      return
-    }
+  if (keyed && !fields) {
+    if (strict)
+      throw new SyntaxError('Keyed header requires a fields segment')
+    return
+  }
+
+  // A fields-bearing header, keyed or not, carries no inline content;
+  // decoding the values as an inline array would silently drop the fields
+  if (fields && afterColon) {
+    if (strict)
+      throw new SyntaxError('Unexpected content after fields-bearing header colon')
+    return
   }
 
   return {
