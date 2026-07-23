@@ -26,20 +26,6 @@ export const DRY_RUN_LIMITS = {
 }
 
 /**
- * Model-specific RPM (requests per minute) limits to handle API quotas
- *
- * @remarks
- * Set `undefined` for models without specific limits.
- */
-/// keep-sorted
-export const MODEL_RPM_LIMITS: Record<string, number | undefined> = {
-  'claude-haiku-4-5-20251001': 50,
-  'gemini-3.6-flash': 25,
-  'gpt-5.4-nano': 50,
-  'grok-4-1-fast-non-reasoning': 25,
-}
-
-/**
  * Question type identifiers
  */
 export const QUESTION_TYPES = [

@@ -9,13 +9,25 @@ import { generateText } from 'ai'
 import { compareAnswers } from './normalize.ts'
 
 /**
+ * A model paired with its rate limit and lazy provider constructor.
+ */
+export interface ModelDescriptor {
+  /** Provider model id; must equal the underlying LanguageModelV4.modelId */
+  id: string
+  /** Requests-per-minute cap, or undefined for no limit */
+  rpm?: number
+  /** Lazily construct the provider model */
+  create: () => LanguageModelV4
+}
+
+/**
  * Models used for evaluation
  */
-export const models: LanguageModelV4[] = [
-  anthropic('claude-haiku-4-5-20251001'),
-  google('gemini-3.6-flash'),
-  openai('gpt-5.4-nano'),
-  xai('grok-4-1-fast-non-reasoning'),
+export const MODELS: ModelDescriptor[] = [
+  { id: 'claude-haiku-4-5-20251001', rpm: 50, create: () => anthropic('claude-haiku-4-5-20251001') },
+  { id: 'gemini-3.6-flash', rpm: 25, create: () => google('gemini-3.6-flash') },
+  { id: 'gpt-5.4-nano', rpm: 50, create: () => openai('gpt-5.4-nano') },
+  { id: 'grok-4-1-fast-non-reasoning', rpm: 25, create: () => xai('grok-4-1-fast-non-reasoning') },
 ]
 
 /**

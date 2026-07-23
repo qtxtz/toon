@@ -1,3 +1,4 @@
+import type { ModelDescriptor } from '../src/evaluate.ts'
 import type { Format } from '../src/formats.ts'
 import type { Question } from '../src/types.ts'
 import * as fsp from 'node:fs/promises'
@@ -5,9 +6,9 @@ import * as path from 'node:path'
 import process from 'node:process'
 import * as prompts from '@clack/prompts'
 import PQueue from 'p-queue'
-import { BENCHMARKS_DIR, DEFAULT_CONCURRENCY, DRY_RUN, DRY_RUN_LIMITS, MODEL_RPM_LIMITS, ROOT_DIR } from '../src/constants.ts'
+import { BENCHMARKS_DIR, DEFAULT_CONCURRENCY, DRY_RUN, DRY_RUN_LIMITS, ROOT_DIR } from '../src/constants.ts'
 import { ACCURACY_DATASETS } from '../src/datasets.ts'
-import { evaluateQuestion, models } from '../src/evaluate.ts'
+import { evaluateQuestion, MODELS } from '../src/evaluate.ts'
 import { FORMATS, supportsCSV } from '../src/formats.ts'
 import { generateQuestions } from '../src/questions/index.ts'
 import { calculateFormatResults, calculateTokenCounts, generateAccuracyReport } from '../src/report.ts'
@@ -43,13 +44,13 @@ function generateEvaluationTasks(questions: Question[]): { question: Question, f
 /**
  * Check which models already have saved results
  */
-async function checkExistingResults(activeModels: typeof models) {
+async function checkExistingResults(activeModels: ModelDescriptor[]) {
   const existingModelResults: Record<string, boolean> = {}
 
   for (const model of activeModels) {
-    const existingResult = await hasModelResults(model.modelId)
+    const existingResult = await hasModelResults(model.id)
     if (existingResult)
-      existingModelResults[model.modelId] = existingResult
+      existingModelResults[model.id] = existingResult
   }
 
   return existingModelResults
@@ -73,20 +74,18 @@ function createProgressUpdater(spinner: ReturnType<typeof prompts.spinner>, tota
 /**
  * Create a rate-limited queue for model evaluation
  */
-function createEvaluationQueue(modelId: string) {
-  const rpmLimit = MODEL_RPM_LIMITS[modelId]
-
+function createEvaluationQueue(rpm: number | undefined) {
   return new PQueue({
     concurrency: DEFAULT_CONCURRENCY,
-    intervalCap: rpmLimit ?? Infinity,
-    interval: rpmLimit ? RATE_LIMIT_INTERVAL_MS : 0,
+    intervalCap: rpm ?? Infinity,
+    interval: rpm ? RATE_LIMIT_INTERVAL_MS : 0,
   })
 }
 
 // Prompt user to select which models to benchmark
-const modelChoices = models.map(({ modelId }) => ({
-  value: modelId,
-  label: modelId,
+const modelChoices = MODELS.map(({ id }) => ({
+  value: id,
+  label: id,
 }))
 
 const selectedModels = await prompts.multiselect({
@@ -100,9 +99,9 @@ if (prompts.isCancel(selectedModels)) {
   process.exit(0)
 }
 
-const activeModels = models.filter(m => selectedModels.includes(m.modelId))
+const activeModels = MODELS.filter(m => selectedModels.includes(m.id))
 
-prompts.log.info(`Selected ${activeModels.length} model(s): ${activeModels.map(m => m.modelId).join(', ')}`)
+prompts.log.info(`Selected ${activeModels.length} model(s): ${activeModels.map(m => m.id).join(', ')}`)
 
 // Check which models already have results
 const existingModelResults = await checkExistingResults(activeModels)
@@ -126,8 +125,8 @@ prompts.log.info(`Evaluating ${questions.length} questions`)
 prompts.log.info(`Testing ${Object.keys(FORMATS).length} formats`)
 
 // Evaluate each model separately and save results incrementally
-for (const model of activeModels) {
-  const modelId = model.modelId
+for (const descriptor of activeModels) {
+  const modelId = descriptor.id
 
   // Skip if results already exist
   if (existingModelResults[modelId]) {
@@ -141,11 +140,11 @@ for (const model of activeModels) {
   const tasks = generateEvaluationTasks(questions)
 
   const total = tasks.length
-  const rpmLimit = MODEL_RPM_LIMITS[modelId]
-  const queue = createEvaluationQueue(modelId)
+  const languageModel = descriptor.create()
+  const queue = createEvaluationQueue(descriptor.rpm)
 
   const evalSpinner = prompts.spinner()
-  evalSpinner.start(`Running ${total} evaluations (concurrency: ${DEFAULT_CONCURRENCY}, RPM limit: ${rpmLimit ?? 'unlimited'})`)
+  evalSpinner.start(`Running ${total} evaluations (concurrency: ${DEFAULT_CONCURRENCY}, RPM limit: ${descriptor.rpm ?? 'unlimited'})`)
 
   const updateProgress = createProgressUpdater(evalSpinner, total)
 
@@ -160,7 +159,7 @@ for (const model of activeModels) {
         question: task.question,
         format: task.format,
         formattedData,
-        model,
+        model: languageModel,
       })
 
       // Progress update after task completes

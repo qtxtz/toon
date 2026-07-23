@@ -2,7 +2,7 @@ import type { Format } from './formats.ts'
 import type { Dataset, EfficiencyRanking, EvaluationResult, FormatResult, Question } from './types.ts'
 import { QUESTION_TYPE_LABELS, QUESTION_TYPES } from './constants.ts'
 import { ACCURACY_DATASETS } from './datasets.ts'
-import { models } from './evaluate.ts'
+import { MODELS } from './evaluate.ts'
 import { FORMATS, getFormat, supportsCSV } from './formats.ts'
 import { generateQuestions } from './questions/index.ts'
 import { createProgressBar, tokenize } from './utils.ts'
@@ -81,7 +81,7 @@ export function generateAccuracyReport(
 ): string {
   const questions = generateQuestions()
   const totalQuestions = [...new Set(results.map(r => r.questionId))].length
-  const modelIds = models.map(m => m.modelId)
+  const modelIds = MODELS.map(m => m.id)
   const modelNames = modelIds.filter(id => results.some(r => r.model === id))
 
   return `
@@ -211,7 +211,7 @@ function generateDetailedAccuracyReport(
   const toon = formatResults.find(r => r.format === 'toon')
   const json = formatResults.find(r => r.format === 'json-pretty')
 
-  const modelIds = models.map(m => m.modelId)
+  const modelIds = MODELS.map(m => m.id)
   const modelNames = modelIds.filter(id => results.some(r => r.model === id))
 
   // Generate model breakdown section
