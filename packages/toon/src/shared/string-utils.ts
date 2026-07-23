@@ -26,8 +26,7 @@ export function trimSpaces(value: string): string {
  * Escapes special characters in a string for encoding.
  *
  * @remarks
- * Handles backslashes, quotes, newlines, carriage returns, and tabs.
- * Other U+0000–U+001F control characters are emitted as `\uXXXX`.
+ * Control characters outside `\n`, `\r`, `\t`, `\\`, and `"` are emitted as `\uXXXX`.
  */
 export function escapeString(value: string): string {
   return value
@@ -44,8 +43,7 @@ export function escapeString(value: string): string {
  * Unescapes a string by processing escape sequences.
  *
  * @remarks
- * Handles `\n`, `\t`, `\r`, `\\`, `\"`, and `\uXXXX` escape sequences.
- * Lone surrogates in `\uXXXX` are rejected.
+ * Lone surrogates in `\uXXXX` escapes are rejected.
  */
 export function unescapeString(value: string): string {
   let unescaped = ''
@@ -126,7 +124,7 @@ export function findClosingQuote(content: string, start: number): number {
     }
     i++
   }
-  return -1 // Not found
+  return -1
 }
 
 /**

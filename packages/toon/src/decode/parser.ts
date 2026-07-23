@@ -76,7 +76,6 @@ export function parseArrayHeaderLine(
     }
   }
 
-  // Now find colon after brackets and braces
   colonIndex = findUnquotedChar(content, COLON, Math.max(bracketEnd, braceEnd))
   if (colonIndex === -1) {
     return
@@ -116,7 +115,6 @@ export function parseArrayHeaderLine(
 
   const { length, delimiter, keyed } = parsedBracket
 
-  // Check for fields segment
   let fields: FieldNode[] | undefined
   if (braceStart !== -1 && braceStart < colonIndex) {
     const foundBraceEnd = findMatchingBrace(content, braceStart)
@@ -140,7 +138,7 @@ export function parseArrayHeaderLine(
       }
 
       // Duplicate field names produce duplicate sibling keys in every
-      // decoded element: strict mode errors, non-strict LWW applies
+      // decoded element: strict mode errors, non-strict LWW applies.
       if (strict) {
         assertNoDuplicateFieldNames(fields)
       }
@@ -154,7 +152,7 @@ export function parseArrayHeaderLine(
   }
 
   // A fields-bearing header, keyed or not, carries no inline content;
-  // decoding the values as an inline array would silently drop the fields
+  // decoding the values as an inline array would silently drop the fields.
   if (fields && afterColon) {
     if (strict)
       throw new SyntaxError('Unexpected content after fields-bearing header colon')
@@ -181,7 +179,6 @@ export function parseBracketSegment(
 ): { length: number, delimiter: Delimiter, keyed: boolean } {
   let content = seg
 
-  // Check for delimiter suffix
   let delimiter = defaultDelimiter
   if (content.endsWith(TAB)) {
     delimiter = DELIMITERS.tab
@@ -385,15 +382,7 @@ function formatDelimiter(delimiter: Delimiter): string {
 
 // #region Delimited value parsing
 
-/**
- * Parses a delimited string into values, respecting quoted strings and escape sequences.
- *
- * @remarks
- * Uses a state machine that tracks:
- * - `inQuotes`: Whether we're inside a quoted string (to ignore delimiters)
- * - `valueBuffer`: Accumulates characters for the current value
- * - Escape sequences: Handled within quoted strings
- */
+/** Parses a delimited string into values, respecting quoted strings and escape sequences. */
 export function parseDelimitedValues(input: string, delimiter: Delimiter): string[] {
   const values: string[] = []
   let valueBuffer = ''
@@ -404,7 +393,6 @@ export function parseDelimitedValues(input: string, delimiter: Delimiter): strin
     const char = input[i]
 
     if (char === BACKSLASH && i + 1 < input.length && inQuotes) {
-      // Escape sequence in quoted string
       valueBuffer += char + input[i + 1]
       i += 2
       continue
@@ -428,7 +416,6 @@ export function parseDelimitedValues(input: string, delimiter: Delimiter): strin
     i++
   }
 
-  // Add last value
   if (valueBuffer || values.length > 0) {
     values.push(trimSpaces(valueBuffer))
   }
@@ -447,17 +434,15 @@ export function mapRowValuesToPrimitives(values: string[]): JsonPrimitive[] {
 export function parsePrimitiveToken(token: string): JsonPrimitive {
   const trimmedToken = trimSpaces(token)
 
-  // Empty token
   if (!trimmedToken) {
     return ''
   }
 
-  // Quoted string (if starts with quote, it MUST be properly quoted)
+  // A leading quote forces a properly quoted string
   if (trimmedToken.startsWith(DOUBLE_QUOTE)) {
     return parseStringLiteral(trimmedToken)
   }
 
-  // Boolean or null literals
   if (isBooleanOrNullLiteral(trimmedToken)) {
     if (trimmedToken === TRUE_LITERAL)
       return true
@@ -467,14 +452,12 @@ export function parsePrimitiveToken(token: string): JsonPrimitive {
       return null
   }
 
-  // Numeric literal
   if (isNumericLiteral(trimmedToken)) {
     const parsedNumber = Number.parseFloat(trimmedToken)
     // Normalize negative zero to positive zero
     return Object.is(parsedNumber, -0) ? 0 : parsedNumber
   }
 
-  // Unquoted string
   return trimmedToken
 }
 
@@ -482,11 +465,9 @@ export function parseStringLiteral(token: string): string {
   const trimmedToken = trimSpaces(token)
 
   if (trimmedToken.startsWith(DOUBLE_QUOTE)) {
-    // Find the closing quote, accounting for escaped quotes
     const closingQuoteIndex = findClosingQuote(trimmedToken, 0)
 
     if (closingQuoteIndex === -1) {
-      // No closing quote was found
       throw new SyntaxError('Unterminated string: missing closing quote')
     }
 
@@ -507,33 +488,28 @@ export function parseUnquotedKey(content: string, start: number): { key: string,
     parsePosition++
   }
 
-  // Validate that a colon was found
   if (parsePosition >= content.length || content[parsePosition] !== COLON) {
     throw new SyntaxError('Missing colon after key')
   }
 
   const key = trimSpaces(content.slice(start, parsePosition))
 
-  // Skip the colon
   parsePosition++
 
   return { key, end: parsePosition }
 }
 
 export function parseQuotedKey(content: string, start: number): { key: string, end: number } {
-  // Find the closing quote, accounting for escaped quotes
   const closingQuoteIndex = findClosingQuote(content, start)
 
   if (closingQuoteIndex === -1) {
     throw new SyntaxError('Unterminated quoted key')
   }
 
-  // Extract and unescape the key content
   const keyContent = content.slice(start + 1, closingQuoteIndex)
   const key = unescapeString(keyContent)
   let parsePosition = closingQuoteIndex + 1
 
-  // Validate and skip colon after quoted key
   if (parsePosition >= content.length || content[parsePosition] !== COLON) {
     throw new SyntaxError('Missing colon after key')
   }

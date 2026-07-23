@@ -134,14 +134,12 @@ export function* encodeArrayLines(
     return
   }
 
-  // Primitive array
   if (isArrayOfPrimitives(value)) {
     const arrayLine = encodeInlineArrayLine(value, options.delimiter, key)
     yield indentedLine(depth, arrayLine, options.indent)
     return
   }
 
-  // Array of arrays (all primitives)
   if (isArrayOfArrays(value)) {
     const allPrimitiveArrays = value.every(arr => isArrayOfPrimitives(arr))
     if (allPrimitiveArrays) {
@@ -150,7 +148,6 @@ export function* encodeArrayLines(
     }
   }
 
-  // Array of objects
   if (isArrayOfObjects(value)) {
     const header = extractTabularHeader(value)
     if (header) {
@@ -323,11 +320,9 @@ export function* encodeObjectAsListItemLines(
   const [firstKey, firstValue] = entries[0]!
   const restEntries = entries.slice(1)
 
-  // Check if first field is a tabular array
   if (isJsonArray(firstValue) && isArrayOfObjects(firstValue)) {
     const header = extractTabularHeader(firstValue)
     if (header) {
-      // Tabular array as first field
       const formattedHeader = formatHeader(firstValue.length, { key: firstKey, fields: header, delimiter: options.delimiter })
       yield indentedListItem(depth, formattedHeader, options.indent)
       yield* writeTabularRowsLines(firstValue, header, depth + 2, options)
@@ -340,8 +335,8 @@ export function* encodeObjectAsListItemLines(
     }
   }
 
-  // Check if first field is a keyed tabular object: header on the hyphen
-  // line, entry rows at depth +2, sibling fields at depth +1
+  // Keyed tabular object as first field: header on the hyphen line, entry
+  // rows at depth +2, sibling fields at depth +1
   if (isJsonObject(firstValue)) {
     const keyedFields = extractKeyedFields(firstValue)
     if (keyedFields) {
@@ -361,22 +356,19 @@ export function* encodeObjectAsListItemLines(
   const encodedKey = encodeKey(firstKey)
 
   if (isEncodablePrimitive(firstValue)) {
-    // Primitive value: `- key: value`
     const encodedValue = encodePrimitive(firstValue, options.delimiter)
     yield indentedListItem(depth, `${encodedKey}: ${encodedValue}`, options.indent)
   }
   else if (isJsonArray(firstValue)) {
     if (firstValue.length === 0) {
-      // Empty array: `- key: []`
       yield indentedListItem(depth, `${encodedKey}: []`, options.indent)
     }
     else if (isArrayOfPrimitives(firstValue)) {
-      // Inline primitive array: `- key[N]: values`
       const arrayLine = encodeInlineArrayLine(firstValue, options.delimiter)
       yield indentedListItem(depth, `${encodedKey}${arrayLine}`, options.indent)
     }
     else {
-      // Non-inline array: `- key[N]:` with items at depth + 2
+      // Non-inline array items sit at depth + 2, below the hyphen line
       const header = formatHeader(firstValue.length, { delimiter: options.delimiter })
       yield indentedListItem(depth, `${encodedKey}${header}`, options.indent)
 
@@ -386,7 +378,6 @@ export function* encodeObjectAsListItemLines(
     }
   }
   else if (isJsonObject(firstValue)) {
-    // Object value: `- key:` with fields at depth + 2
     yield indentedListItem(depth, `${encodedKey}:`, options.indent)
     if (!isEmptyObject(firstValue)) {
       yield* encodeObjectLines(firstValue, depth + 2, options)

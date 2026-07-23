@@ -39,43 +39,35 @@ export function isSafeUnquoted(value: string, delimiter: string = DEFAULT_DELIMI
     return false
   }
 
-  // Check if it looks like any literal value (boolean, null, or numeric)
   if (isBooleanOrNullLiteral(value) || isNumericLike(value)) {
     return false
   }
 
-  // Check for colon (always structural)
   if (value.includes(':')) {
     return false
   }
 
-  // Check for quotes and backslash (always need escaping)
   if (value.includes('"') || value.includes('\\')) {
     return false
   }
 
-  // Check for brackets and braces (always structural)
   if (/[[\]{}]/.test(value)) {
     return false
   }
 
-  // Check for control characters (any U+0000–U+001F always need quoting/escaping)
   // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u001F]/.test(value)) {
     return false
   }
 
-  // Check for the active delimiter
   if (value.includes(delimiter)) {
     return false
   }
 
-  // Check for hyphen at start (list marker)
   if (value.startsWith(LIST_ITEM_MARKER)) {
     return false
   }
 
-  // Check for comment marker at start (would read as a comment line)
   if (value.startsWith(COMMENT_MARKER)) {
     return false
   }
@@ -83,12 +75,6 @@ export function isSafeUnquoted(value: string, delimiter: string = DEFAULT_DELIMI
   return true
 }
 
-/**
- * Checks if a string looks like a number.
- *
- * @remarks
- * Match numbers like `42`, `-3.14`, `1e-6`, `05`, etc.
- */
 function isNumericLike(value: string): boolean {
   return NUMERIC_LIKE_PATTERN.test(value) || LEADING_ZERO_PATTERN.test(value)
 }

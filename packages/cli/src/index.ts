@@ -76,13 +76,11 @@ export const mainCommand: CommandDef<ArgsDef> = defineCommand({
       : { type: 'file', path: path.resolve(input) }
     const outputPath = args.output ? path.resolve(args.output) : undefined
 
-    // Parse and validate indent
     const indent = Number.parseInt(args.indent || '2', 10)
     if (Number.isNaN(indent) || indent < 0) {
       throw new Error(`Invalid indent value: ${args.indent}`)
     }
 
-    // Validate delimiter
     const delimiter = args.delimiter || DEFAULT_DELIMITER
     if (!(Object.values(DELIMITERS)).includes(delimiter as Delimiter)) {
       throw new Error(`Invalid delimiter "${delimiter}". Valid delimiters are: comma (,), tab (\\t), pipe (|)`)

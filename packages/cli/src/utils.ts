@@ -15,7 +15,6 @@ export function detectMode(
   if (decodeFlag)
     return 'decode'
 
-  // Auto-detect based on file extension
   if (input.type === 'file') {
     if (input.path.endsWith('.json'))
       return 'encode'
@@ -23,7 +22,6 @@ export function detectMode(
       return 'decode'
   }
 
-  // Default to encode
   return 'encode'
 }
 
@@ -84,7 +82,6 @@ export async function* readLinesFromSource(source: InputSource): AsyncIterable<s
     ? process.stdin
     : createReadStream(source.path, { encoding: 'utf-8' })
 
-  // Explicitly set encoding for stdin
   if (source.type === 'stdin') {
     stream.setEncoding('utf-8')
   }
@@ -102,7 +99,7 @@ export async function* readLinesFromSource(source: InputSource): AsyncIterable<s
     }
   }
 
-  // Emit last line if buffer is not empty and doesn't end with newline
+  // Emit final line when the buffer has no trailing newline
   if (buffer.length > 0) {
     yield buffer
   }

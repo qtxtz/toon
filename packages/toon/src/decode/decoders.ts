@@ -143,7 +143,6 @@ export function* decodeStreamSync(
     return
   }
 
-  // Check for root array
   if (isArrayHeaderContent(first.content)) {
     const headerInfo = withLine(first, () => parseArrayHeaderLine(first.content, DEFAULT_DELIMITER, resolvedOptions.strict))
     if (headerInfo) {
@@ -154,7 +153,6 @@ export function* decodeStreamSync(
     }
   }
 
-  // Check for single primitive
   cursor.advanceSync()
   const hasMore = !cursor.atEndSync()
   if (!hasMore && !isKeyValueLineSync(first)) {
@@ -235,7 +233,7 @@ function keylessFieldsHeaderError(line: ParsedLine): ToonDecodeError {
 }
 
 // Strict decoding never silently discards input: once the root form is
-// complete, any remaining line is an error rather than dropped data
+// complete, any remaining line is an error rather than dropped data.
 function assertFullyConsumedSync(cursor: StreamingLineCursor, strict: boolean): void {
   if (!strict) {
     return
@@ -283,7 +281,6 @@ function* decodeKeyValueSync(
 ): Generator<JsonStreamEvent> {
   const content = line.content
 
-  // Check for array header first
   const arrayHeader = withLine(line, () => parseArrayHeaderLine(content, DEFAULT_DELIMITER, options.strict))
   if (arrayHeader && arrayHeader.header.key !== undefined) {
     assertNoDuplicateKey(arrayHeader.header.key, line, seenKeys)
@@ -293,19 +290,18 @@ function* decodeKeyValueSync(
   }
 
   // Keyless headers are only valid at the document root or as list items;
-  // non-strict decoders fall through to key-value parsing
+  // non-strict decoders fall through to key-value parsing.
   if (arrayHeader && arrayHeader.header.key === undefined && options.strict) {
     throw arrayHeader.header.keyed ? keylessKeyedError(line) : keylessHeaderError(line)
   }
 
-  // Regular key-value pair
   const { key, end } = withLine(line, () => parseKeyToken(content, 0))
   const rest = trimSpaces(content.slice(end))
 
   assertNoDuplicateKey(key, line, seenKeys)
   yield { type: 'key', key }
 
-  // No value after colon - expect nested object or empty
+  // No value after colon – expect nested object or empty
   if (!rest) {
     const nextLine = cursor.peekSync()
     if (nextLine && nextLine.depth > baseDepth) {
@@ -316,7 +312,6 @@ function* decodeKeyValueSync(
       return
     }
 
-    // Empty object
     yield { type: 'startObject' }
     yield { type: 'endObject' }
     return
@@ -328,7 +323,6 @@ function* decodeKeyValueSync(
     return
   }
 
-  // Inline primitive value
   yield { type: 'primitive', value: withLine(line, () => parsePrimitiveToken(rest)) }
 }
 
@@ -382,21 +376,18 @@ function* decodeArrayFromHeaderSync(
 
   yield { type: 'startArray', length: header.length }
 
-  // Inline primitive array
   if (inlineValues) {
     yield* decodeInlinePrimitiveArraySync(header, inlineValues, options, headerLine)
     yield { type: 'endArray' }
     return
   }
 
-  // Tabular array
   if (header.fields && header.fields.length > 0) {
     yield* decodeTabularArraySync(header, cursor, baseDepth, options, headerLine)
     yield { type: 'endArray' }
     return
   }
 
-  // List array
   yield* decodeListArraySync(header, cursor, baseDepth, options, headerLine)
   yield { type: 'endArray' }
 }
@@ -441,7 +432,7 @@ function* decodeKeyedObjectSync(
 
   // A keyed scope ends only when the depth decreases to the header's
   // depth or less, or at end of input; every line at entry depth with an
-  // unquoted colon is an entry row
+  // unquoted colon is an entry row.
   while (!cursor.atEndSync()) {
     const line = cursor.peekSync()
     if (!line || line.depth <= baseDepth) {
@@ -478,7 +469,7 @@ function* decodeKeyedObjectSync(
     lastEntryLine = line
 
     // Split at the first unquoted colon: entry key first, then the
-    // remainder splits on the active delimiter into cells
+    // remainder splits on the active delimiter into cells.
     const { key, end } = withLine(line, () => parseKeyToken(line.content, 0))
     assertNoDuplicateKey(key, line, seenEntryKeys)
     yield { type: 'key', key }
@@ -657,12 +648,11 @@ function* decodeListItemSync(
 
   const itemLine: ParsedLine = { ...line, content: afterHyphen }
 
-  // Check for array header after hyphen
   if (isArrayHeaderContent(afterHyphen)) {
     const arrayHeader = withLine(itemLine, () => parseArrayHeaderLine(afterHyphen, DEFAULT_DELIMITER, options.strict))
     if (arrayHeader) {
       // There is no keyless keyed (`- [N:]{fields}:`) or fields-bearing
-      // (`- [N]{fields}:`) list-item form
+      // (`- [N]{fields}:`) list-item form.
       if (arrayHeader.header.keyed || arrayHeader.header.fields !== undefined) {
         if (options.strict) {
           throw arrayHeader.header.keyed ? keylessKeyedError(itemLine) : keylessFieldsHeaderError(itemLine)
@@ -675,10 +665,9 @@ function* decodeListItemSync(
     }
   }
 
-  // Check for tabular-first list-item object: `- key[N]{fields}:`
+  // Tabular-first list-item object: `- key[N]{fields}:`
   const headerInfo = withLine(itemLine, () => parseArrayHeaderLine(afterHyphen, DEFAULT_DELIMITER, options.strict))
   if (headerInfo && headerInfo.header.key !== undefined && headerInfo.header.fields !== undefined) {
-    // Object with tabular array as first field
     const header = headerInfo.header
     const seenKeys = options.strict ? new Set<string>([header.key!]) : undefined
     yield { type: 'startObject' }
@@ -687,7 +676,7 @@ function* decodeListItemSync(
     // Use baseDepth + 1 for the array so rows are at baseDepth + 2
     yield* decodeArrayFromHeaderSync(header, headerInfo.inlineValues, cursor, baseDepth + 1, options, itemLine)
 
-    // Read sibling fields at depth = baseDepth + 1
+    // Read sibling fields
     const followDepth = baseDepth + 1
     while (!cursor.atEndSync()) {
       const nextLine = cursor.peekSync()
@@ -708,7 +697,6 @@ function* decodeListItemSync(
     return
   }
 
-  // Check for object first field after hyphen
   if (isKeyValueContent(afterHyphen)) {
     const seenKeys = options.strict ? new Set<string>() : undefined
     yield { type: 'startObject' }
@@ -735,7 +723,6 @@ function* decodeListItemSync(
     return
   }
 
-  // Primitive value
   yield { type: 'primitive', value: withLine(itemLine, () => parsePrimitiveToken(afterHyphen)) }
 }
 
@@ -768,7 +755,6 @@ export async function* decodeStream(
 
   const scanState = createScanState()
 
-  // Determine if source is async or sync
   if (Symbol.asyncIterator in source) {
     const lineGenerator = parseLinesAsync(source, resolvedOptions.indent, resolvedOptions.strict, scanState)
     const cursor = new StreamingLineCursor(lineGenerator, scanState)
@@ -790,7 +776,6 @@ export async function* decodeStream(
       return
     }
 
-    // Check for root array
     if (isArrayHeaderContent(first.content)) {
       const headerInfo = withLine(first, () => parseArrayHeaderLine(first.content, DEFAULT_DELIMITER, resolvedOptions.strict))
       if (headerInfo) {
@@ -801,7 +786,6 @@ export async function* decodeStream(
       }
     }
 
-    // Check for single primitive
     await cursor.advance()
     const hasMore = !(await cursor.atEnd())
     if (!hasMore && !isKeyValueLineSync(first)) {
@@ -843,7 +827,6 @@ export async function* decodeStream(
     yield { type: 'endObject' }
   }
   else {
-    // Sync source, delegate to sync generator
     yield* decodeStreamSync(source as Iterable<string>, options)
   }
 }
@@ -857,7 +840,6 @@ async function* decodeKeyValueAsync(
 ): AsyncGenerator<JsonStreamEvent> {
   const content = line.content
 
-  // Check for array header first
   const arrayHeader = withLine(line, () => parseArrayHeaderLine(content, DEFAULT_DELIMITER, options.strict))
   if (arrayHeader && arrayHeader.header.key !== undefined) {
     assertNoDuplicateKey(arrayHeader.header.key, line, seenKeys)
@@ -867,19 +849,18 @@ async function* decodeKeyValueAsync(
   }
 
   // Keyless headers are only valid at the document root or as list items;
-  // non-strict decoders fall through to key-value parsing
+  // non-strict decoders fall through to key-value parsing.
   if (arrayHeader && arrayHeader.header.key === undefined && options.strict) {
     throw arrayHeader.header.keyed ? keylessKeyedError(line) : keylessHeaderError(line)
   }
 
-  // Regular key-value pair
   const { key, end } = withLine(line, () => parseKeyToken(content, 0))
   const rest = trimSpaces(content.slice(end))
 
   assertNoDuplicateKey(key, line, seenKeys)
   yield { type: 'key', key }
 
-  // No value after colon - expect nested object or empty
+  // No value after colon – expect nested object or empty
   if (!rest) {
     const nextLine = await cursor.peek()
     if (nextLine && nextLine.depth > baseDepth) {
@@ -890,7 +871,6 @@ async function* decodeKeyValueAsync(
       return
     }
 
-    // Empty object
     yield { type: 'startObject' }
     yield { type: 'endObject' }
     return
@@ -902,7 +882,6 @@ async function* decodeKeyValueAsync(
     return
   }
 
-  // Inline primitive value
   yield { type: 'primitive', value: withLine(line, () => parsePrimitiveToken(rest)) }
 }
 
@@ -956,21 +935,18 @@ async function* decodeArrayFromHeaderAsync(
 
   yield { type: 'startArray', length: header.length }
 
-  // Inline primitive array
   if (inlineValues) {
     yield* decodeInlinePrimitiveArraySync(header, inlineValues, options, headerLine)
     yield { type: 'endArray' }
     return
   }
 
-  // Tabular array
   if (header.fields && header.fields.length > 0) {
     yield* decodeTabularArrayAsync(header, cursor, baseDepth, options, headerLine)
     yield { type: 'endArray' }
     return
   }
 
-  // List array
   yield* decodeListArrayAsync(header, cursor, baseDepth, options, headerLine)
   yield { type: 'endArray' }
 }
@@ -994,7 +970,7 @@ async function* decodeKeyedObjectAsync(
 
   // A keyed scope ends only when the depth decreases to the header's
   // depth or less, or at end of input; every line at entry depth with an
-  // unquoted colon is an entry row
+  // unquoted colon is an entry row.
   while (!(await cursor.atEnd())) {
     const line = await cursor.peek()
     if (!line || line.depth <= baseDepth) {
@@ -1031,7 +1007,7 @@ async function* decodeKeyedObjectAsync(
     lastEntryLine = line
 
     // Split at the first unquoted colon: entry key first, then the
-    // remainder splits on the active delimiter into cells
+    // remainder splits on the active delimiter into cells.
     const { key, end } = withLine(line, () => parseKeyToken(line.content, 0))
     assertNoDuplicateKey(key, line, seenEntryKeys)
     yield { type: 'key', key }
@@ -1210,12 +1186,11 @@ async function* decodeListItemAsync(
 
   const itemLine: ParsedLine = { ...line, content: afterHyphen }
 
-  // Check for array header after hyphen
   if (isArrayHeaderContent(afterHyphen)) {
     const arrayHeader = withLine(itemLine, () => parseArrayHeaderLine(afterHyphen, DEFAULT_DELIMITER, options.strict))
     if (arrayHeader) {
       // There is no keyless keyed (`- [N:]{fields}:`) or fields-bearing
-      // (`- [N]{fields}:`) list-item form
+      // (`- [N]{fields}:`) list-item form.
       if (arrayHeader.header.keyed || arrayHeader.header.fields !== undefined) {
         if (options.strict) {
           throw arrayHeader.header.keyed ? keylessKeyedError(itemLine) : keylessFieldsHeaderError(itemLine)
@@ -1228,10 +1203,9 @@ async function* decodeListItemAsync(
     }
   }
 
-  // Check for tabular-first list-item object: `- key[N]{fields}:`
+  // Tabular-first list-item object: `- key[N]{fields}:`
   const headerInfo = withLine(itemLine, () => parseArrayHeaderLine(afterHyphen, DEFAULT_DELIMITER, options.strict))
   if (headerInfo && headerInfo.header.key !== undefined && headerInfo.header.fields !== undefined) {
-    // Object with tabular array as first field
     const header = headerInfo.header
     const seenKeys = options.strict ? new Set<string>([header.key!]) : undefined
     yield { type: 'startObject' }
@@ -1240,7 +1214,7 @@ async function* decodeListItemAsync(
     // Use baseDepth + 1 for the array so rows are at baseDepth + 2
     yield* decodeArrayFromHeaderAsync(header, headerInfo.inlineValues, cursor, baseDepth + 1, options, itemLine)
 
-    // Read sibling fields at depth = baseDepth + 1
+    // Read sibling fields
     const followDepth = baseDepth + 1
     while (!(await cursor.atEnd())) {
       const nextLine = await cursor.peek()
@@ -1261,7 +1235,6 @@ async function* decodeListItemAsync(
     return
   }
 
-  // Check for object first field after hyphen
   if (isKeyValueContent(afterHyphen)) {
     const seenKeys = options.strict ? new Set<string>() : undefined
     yield { type: 'startObject' }
@@ -1288,7 +1261,6 @@ async function* decodeListItemAsync(
     return
   }
 
-  // Primitive value
   yield { type: 'primitive', value: withLine(itemLine, () => parsePrimitiveToken(afterHyphen)) }
 }
 

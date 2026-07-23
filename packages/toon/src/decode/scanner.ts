@@ -30,12 +30,11 @@ export function parseLineIncremental(
   const lineNumber = state.lineNumber
 
   // A trailing carriage return belongs to a CRLF line terminator, not to
-  // the line's content
+  // the line's content.
   if (raw[raw.length - 1] === CARRIAGE_RETURN) {
     raw = raw.slice(0, -1)
   }
 
-  // Count leading spaces
   let indent = 0
   while (indent < raw.length && raw[indent] === SPACE) {
     indent++
@@ -45,12 +44,11 @@ export function parseLineIncremental(
 
   // Comment lines vanish in a lexical pre-pass: they are removed before
   // blank-line tracking and strict validation, and are never counted as
-  // rows, items, entries, or blank lines
+  // rows, items, entries, or blank lines.
   if (content[0] === COMMENT_MARKER) {
     return undefined
   }
 
-  // Track blank lines
   if (!content.trim()) {
     const depth = computeDepthFromIndent(indent, indentSize)
     state.blankLines.push({ lineNumber, indent, depth })
@@ -59,7 +57,6 @@ export function parseLineIncremental(
 
   const depth = computeDepthFromIndent(indent, indentSize)
 
-  // Strict mode validation
   if (strict) {
     // Find the full leading whitespace region (spaces and tabs)
     let whitespaceEndIndex = 0
@@ -70,7 +67,6 @@ export function parseLineIncremental(
       whitespaceEndIndex++
     }
 
-    // Check for tabs in leading whitespace (before actual content)
     if (raw.slice(0, whitespaceEndIndex).includes(TAB)) {
       throw new ToonDecodeError(
         'Tabs are not allowed in indentation in strict mode',
@@ -78,7 +74,6 @@ export function parseLineIncremental(
       )
     }
 
-    // Check for exact multiples of indentSize
     if (indent > 0 && indent % indentSize !== 0) {
       throw new ToonDecodeError(
         `Indentation must be exact multiple of ${indentSize}, but found ${indent} spaces`,

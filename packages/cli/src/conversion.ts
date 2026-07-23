@@ -95,14 +95,12 @@ export async function decodeToJson(config: {
 }
 
 /**
- * Writes JSON chunks to a file or stdout using streaming approach.
- * Chunks are written one at a time without building the full string in memory.
+ * Streams JSON chunks to a file or stdout, one at a time without buffering the full string.
  */
 async function writeStreamingJson(
   chunks: AsyncIterable<string> | Iterable<string>,
   outputPath?: string,
 ): Promise<void> {
-  // Stream to file using fs/promises API
   if (outputPath) {
     let fileHandle: FileHandle | undefined
 
@@ -117,7 +115,6 @@ async function writeStreamingJson(
       await fileHandle?.close()
     }
   }
-  // Stream to stdout
   else {
     for await (const chunk of chunks) {
       process.stdout.write(chunk)
@@ -129,8 +126,7 @@ async function writeStreamingJson(
 }
 
 /**
- * Writes TOON lines to a file or stdout using streaming approach.
- * Lines are written one at a time without building the full string in memory.
+ * Streams TOON lines to a file or stdout, one at a time without buffering the full string.
  */
 async function writeStreamingToon(
   lines: Iterable<string>,
@@ -138,7 +134,6 @@ async function writeStreamingToon(
 ): Promise<void> {
   let isFirst = true
 
-  // Stream to file using fs/promises API
   if (outputPath) {
     let fileHandle: FileHandle | undefined
 
@@ -157,7 +152,6 @@ async function writeStreamingToon(
       await fileHandle?.close()
     }
   }
-  // Stream to stdout
   else {
     for (const line of lines) {
       if (!isFirst)

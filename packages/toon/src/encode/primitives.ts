@@ -8,7 +8,6 @@ import { isRawString } from './raw-string.ts'
 // #region Primitive encoding
 
 export function encodePrimitive(value: EncodablePrimitive, delimiter?: string): string {
-  // RawString: pre-formatted output emitted verbatim
   if (isRawString(value)) {
     return value.value
   }

@@ -164,7 +164,6 @@ describe('toon CLI', () => {
       try {
         await runCli({ rawArgs: ['--decode'] })
         const fullOutput = writeChunks.join('')
-        // Remove trailing newline before parsing
         const jsonOutput = fullOutput.endsWith('\n') ? fullOutput.slice(0, -1) : fullOutput
         const result = JSON.parse(jsonOutput)
         expect(result).toEqual(data)
@@ -336,7 +335,6 @@ describe('toon CLI', () => {
         await runCli({ rawArgs: ['--decode', '--no-strict'] })
 
         const fullOutput = writeChunks.join('')
-        // Remove trailing newline before parsing
         const jsonOutput = fullOutput.endsWith('\n') ? fullOutput.slice(0, -1) : fullOutput
         const result = JSON.parse(jsonOutput)
         expect(result).toEqual(data)

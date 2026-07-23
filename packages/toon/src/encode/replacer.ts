@@ -6,20 +6,13 @@ import { isRawString } from './raw-string.ts'
 /**
  * Applies a replacer function to a `JsonValue` and all its descendants.
  *
- * The replacer is called for:
- * - The root value (with key='', path=[])
- * - Every object property (with the property name as key)
- * - Every array element (with the string index as key: '0', '1', etc.)
- *
- * @param root - The normalized `JsonValue` to transform
- * @param replacer - The replacer function to apply
- * @returns The transformed `JsonValue`
+ * The replacer is called for the root (key='', path=[]), every object property
+ * (key = property name), and every array element (key = string index).
  */
 export function applyReplacer(root: JsonValue, replacer: EncodeReplacer): JsonValue {
-  // Call replacer on root with empty string key and empty path
   const replacedRoot = replacer('', root, [])
 
-  // For root, undefined means "no change" (don't omit the root)
+  // At the root, undefined means "no change", never omission
   if (replacedRoot === undefined) {
     return transformChildren(root, replacer, [])
   }
@@ -32,11 +25,6 @@ export function applyReplacer(root: JsonValue, replacer: EncodeReplacer): JsonVa
  *
  * A `RawString` only stands in for a primitive: returned for an object or
  * array value, it is ignored and the original container is traversed normally.
- *
- * @param original - The value at this position before replacement
- * @param replaced - The replacer's return value
- * @param replacer - The replacer function to apply
- * @param path - Current path from root
  */
 function transformReplaced(
   original: JsonValue,
@@ -48,18 +36,10 @@ function transformReplaced(
     return transformChildren(original, replacer, path)
   }
 
-  // Normalize the replaced value (in case user returned non-JsonValue)
+  // Normalize in case the replacer returned a non-JsonValue
   return transformChildren(normalizeValue(replaced), replacer, path)
 }
 
-/**
- * Recursively transforms the children of a `JsonValue` using the replacer.
- *
- * @param value - The value whose children should be transformed
- * @param replacer - The replacer function to apply
- * @param path - Current path from root
- * @returns The value with transformed children
- */
 function transformChildren(
   value: JsonValue,
   replacer: EncodeReplacer,
@@ -77,14 +57,6 @@ function transformChildren(
   return value
 }
 
-/**
- * Transforms an object by applying the replacer to each property.
- *
- * @param obj - The object to transform
- * @param replacer - The replacer function to apply
- * @param path - Current path from root
- * @returns A new object with transformed properties
- */
 function transformObject(
   obj: JsonObject,
   replacer: EncodeReplacer,
@@ -93,7 +65,6 @@ function transformObject(
   const result: Record<string, JsonValue> = {}
 
   for (const [key, value] of Object.entries(obj)) {
-    // Call replacer with the property key and current path
     const childPath = [...path, key]
     const replacedValue = replacer(key, value, childPath)
 
@@ -108,14 +79,6 @@ function transformObject(
   return result
 }
 
-/**
- * Transforms an array by applying the replacer to each element.
- *
- * @param arr - The array to transform
- * @param replacer - The replacer function to apply
- * @param path - Current path from root
- * @returns A new array with transformed elements
- */
 function transformArray(
   arr: JsonArray,
   replacer: EncodeReplacer,
@@ -125,7 +88,7 @@ function transformArray(
 
   for (let i = 0; i < arr.length; i++) {
     const value = arr[i]!
-    // Call replacer with string index (`'0'`, `'1'`, etc.) to match `JSON.stringify` behavior
+    // String index (`'0'`, `'1'`, etc.) matches `JSON.stringify` behavior
     const childPath = [...path, i]
     const replacedValue = replacer(String(i), value, childPath)
 

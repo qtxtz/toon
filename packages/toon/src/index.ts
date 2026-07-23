@@ -109,7 +109,6 @@ export function encodeLines(input: unknown, options?: EncodeOptions): Iterable<s
   const normalizedValue = normalizeValue(input)
   const resolvedOptions = resolveOptions(options)
 
-  // Apply replacer if provided
   const maybeReplacedValue = resolvedOptions.replacer
     ? applyReplacer(normalizedValue, resolvedOptions.replacer)
     : normalizedValue
@@ -120,9 +119,8 @@ export function encodeLines(input: unknown, options?: EncodeOptions): Iterable<s
 /**
  * Decodes TOON format from pre-split lines into a JavaScript value.
  *
- * This is a convenience wrapper around the streaming decoder that builds
- * the full value in memory. Useful when you already have lines as an array
- * or iterable and want the standard decode behavior.
+ * Convenience wrapper around the streaming decoder that builds the full
+ * value in memory.
  *
  * @param lines - Iterable of TOON lines (without newlines)
  * @param options - Optional decoding configuration
@@ -144,9 +142,8 @@ export function decodeFromLines(lines: Iterable<string>, options?: DecodeOptions
 /**
  * Synchronously decodes TOON lines into a stream of JSON events.
  *
- * This function yields structured events (startObject, endObject, startArray, endArray,
- * key, primitive) that represent the JSON data model without building the full value tree.
- * Useful for streaming processing, custom transformations, or memory-efficient parsing.
+ * Yields structured events (startObject, endObject, startArray, endArray, key,
+ * primitive) that represent the JSON data model without building the full value tree.
  *
  * @param lines - Iterable of TOON lines (without newlines)
  * @param options - Optional decoding configuration
@@ -171,10 +168,9 @@ export function decodeStreamSync(lines: Iterable<string>, options?: DecodeStream
 /**
  * Asynchronously decodes TOON lines into a stream of JSON events.
  *
- * This function yields structured events (startObject, endObject, startArray, endArray,
- * key, primitive) that represent the JSON data model without building the full value tree.
- * Supports both sync and async iterables for maximum flexibility with file streams,
- * network responses, or other async sources.
+ * Yields structured events (startObject, endObject, startArray, endArray, key,
+ * primitive) that represent the JSON data model without building the full value tree.
+ * Supports both sync and async iterables.
  *
  * @param source - Async or sync iterable of TOON lines (without newlines)
  * @param options - Optional decoding configuration

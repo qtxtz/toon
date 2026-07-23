@@ -6,7 +6,6 @@ import { isRawString } from './raw-string.ts'
 // #region Normalization (unknown → JsonValue)
 
 export function normalizeValue(value: unknown): JsonValue {
-  // null
   if (value === null) {
     return null
   }
@@ -31,7 +30,6 @@ export function normalizeValue(value: unknown): JsonValue {
     }
   }
 
-  // Primitives
   if (typeof value === 'string' || typeof value === 'boolean') {
     return value
   }
@@ -49,37 +47,31 @@ export function normalizeValue(value: unknown): JsonValue {
 
   // BigInt → number (if safe) or string
   if (typeof value === 'bigint') {
-    // Try to convert to number if within safe integer range
     if (value >= Number.MIN_SAFE_INTEGER && value <= Number.MAX_SAFE_INTEGER) {
       return Number(value)
     }
-    // Otherwise convert to string (will be quoted in output)
+    // String form gets quoted in output
     return value.toString()
   }
 
-  // Date → ISO string
   if (value instanceof Date) {
     return value.toISOString()
   }
 
-  // Array
   if (Array.isArray(value)) {
     return value.map(normalizeValue)
   }
 
-  // Set → array
   if (value instanceof Set) {
     return Array.from(value).map(normalizeValue)
   }
 
-  // Map → object
   if (value instanceof Map) {
     return Object.fromEntries(
       Array.from(value, ([k, v]) => [String(k), normalizeValue(v)]),
     )
   }
 
-  // Plain object
   if (isPlainObject(value)) {
     const encodedValues: Record<string, JsonValue> = {}
 
